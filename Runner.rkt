@@ -28,9 +28,18 @@
       ((equal? (car parsed-code) 'let-exp)
        (run-let-exp parsed-code env))
 
-      ;(print-exp (var-exp a)) should result in -> **screen** 1
       ((equal? (car parsed-code) 'print-exp)
        (run-print-exp (cadr parsed-code) env))
+
+      ;(assign-exp x (num-exp 8))
+      ((equal? (car parsed-code) 'assign-exp)
+       (run-assign-exp (elementAt parsed-code 1)
+                       (run-neo-parsed-code (elementAt parsed-code 2) env)
+                       env))
+      ;(block-exp (assign-exp x (num-exp 8) (print-exp (var-exp 8))))
+      ((equal? (car parsed-code) 'block-exp)
+       (run-block-exp (cdr parsed-code) env))
+       
       
       (else (run-neo-parsed-code
              (cadr parsed-code)
@@ -86,7 +95,7 @@
 ;Runner for parsed print expressions
 (define run-print-exp
   (lambda (parsed-code env)
-    (display (string-append "**screen** " (number->string
+    (displayln (string-append "**screen** " (number->string
                                            (run-neo-parsed-code parsed-code env))))
   )
 )
@@ -102,6 +111,50 @@
     )
   )
 )
+
+
+; Runner for parsed assign expressions
+; add (x 8) into local variable scope
+(define run-assign-exp
+  (lambda (varname value env)
+    (cond
+      ((null? env) #false)
+      ((equal? (caar env) 'global)
+       (cons (list (list varname value)) env))
+      (else (let*
+          ((new-local-scope (cons (list varname value) (car env)))
+           (under-env (cdr env)))
+        (cons new-local-scope under-env))
+      )
+    )
+  )
+)
+
+
+;(block (assign x 8) (print x) (assign y 10) (assign z 12) (print (math + y z)))
+; Runner for parsed block expressions
+;resolve every assign expression one by one
+(define run-block-exp
+  (lambda (parsed-list-exp env)
+    (cond
+      ((null? parsed-list-exp) '())
+      ((equal? (caar parsed-list-exp) 'assign-exp)
+       (run-block-exp
+        (cdr parsed-list-exp)
+        (run-assign-exp
+         (cadr (car parsed-list-exp))
+         (run-neo-parsed-code (elementAt (car parsed-list-exp) 2) env)
+         env)))
+       (else
+        (let ((return (run-neo-parsed-code (car parsed-list-exp) env)))
+          (if (void? return) (run-block-exp (cdr parsed-list-exp) env)
+              (cons return (run-block-exp (cdr parsed-list-exp) env))))
+      )
+    )
+  )
+)
+      
+    
 
 
 (define cascade-update-env

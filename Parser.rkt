@@ -17,9 +17,18 @@
       ((equal? (car neo-code) 'function) (neo-function-code-parser neo-code))
       ((equal? (car neo-code) 'call) (neo-call-code-parser neo-code))
       ((equal? (car neo-code) 'local-vars) (neo-let-code-parser neo-code))
+      
+      ((equal? (car neo-code) 'print)
+       (list 'print-exp (neo-parser (cadr neo-code))))
 
-      ;(print-exp (var-exp a))
-      ((equal? (car neo-code) 'print) (list 'print-exp (neo-parser (cadr neo-code))))
+      ;(assign x 8) -> (assign-exp x (num-exp 8))
+      ((equal? (car neo-code) 'assign)
+       (list 'assign-exp (cadr neo-code) (neo-parser (caddr neo-code))))
+
+      ;(block (assign x 8) (print x)) -> (block-exp (assign-exp x (num-exp 8) (print-exp (var-exp 8))))
+      ((equal? (car neo-code) 'block)
+       (cons 'block-exp (neo-parser (cdr neo-code))))
+
       (else (map neo-parser neo-code))
     )
   )
