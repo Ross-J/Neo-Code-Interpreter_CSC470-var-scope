@@ -122,10 +122,10 @@
       ((equal? (caar env) 'global)
        (cons (list (list varname value)) env))
       (else (let*
-          ((new-local-scope (cons (list varname value) (car env)))
+          ((new-local-scope (update_scope varname value (car env)))
            (under-env (cdr env)))
         (cons new-local-scope under-env))
-      )
+    )
     )
   )
 )

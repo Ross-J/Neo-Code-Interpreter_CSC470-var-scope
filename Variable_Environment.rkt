@@ -72,6 +72,45 @@
 )
 
 
+;goal - if var x is already defined in var scope, assign x should
+   ;not create a new variable, but update existing one
+;case 1 -> scope is empty
+;case 2 -> first name/value pair needs to be updated
+;case 3 -> middle pair needs to be updated
+;case 4 -> no matching pairs can be found
+
+(define update_scope
+  (lambda (varname value scope)
+    (letrec (
+           (check-varname-in-pair (lambda (pair) (equal? (car pair) varname)))
+           (check-varname-in-scope
+            (lambda (curr_scope)
+              (cond
+                ((null? curr_scope) #false)
+                (else
+                 (if (check-varname-in-pair (car curr_scope)) #true
+                     (check-varname-in-scope (cdr curr_scope))
+                     )
+                 )
+                )
+              )
+            )
+           )
+      (cond
+        ((null? scope) (cons (list varname value) scope))
+        ((equal? varname (caar scope)) (cons (list varname value) (cdr scope)))
+        (else
+         (if (check-varname-in-scope scope) 
+             (cons (car scope) (update_scope varname value (cdr scope)))
+             (cons (list varname value) scope)
+             )
+         )
+        )
+      )
+    )
+  )
+
+
 
 (define extend_local_scope
   (lambda (list-of-varname list-of-value env)
