@@ -39,7 +39,10 @@
       ;(block-exp (assign-exp x (num-exp 8) (print-exp (var-exp 8))))
       ((equal? (car parsed-code) 'block-exp)
        (run-block-exp (cdr parsed-code) env))
-       
+
+      ;(while-exp (bool-exp < (var-exp i) (num-exp 10)) (block-exp (assign-exp a (math-exp + (var-exp i) (num-exp 1)))
+      ((equal? (car parsed-code) 'while-exp)
+       (run-while-exp (cadr parsed-code) (caddr parsed-code) env))
       
       (else (run-neo-parsed-code
              (cadr parsed-code)
@@ -114,7 +117,6 @@
 
 
 ; Runner for parsed assign expressions
-; add (x 8) into local variable scope
 (define run-assign-exp
   (lambda (varname value env)
     (cond
@@ -131,9 +133,7 @@
 )
 
 
-;(block (assign x 8) (print x) (assign y 10) (assign z 12) (print (math + y z)))
 ; Runner for parsed block expressions
-;resolve every assign expression one by one
 (define run-block-exp
   (lambda (parsed-list-exp env)
     (cond
@@ -154,7 +154,18 @@
   )
 )
       
-    
+
+;Runner for parsed while loop expressions
+(define run-while-exp
+  (lambda (bool_exp block_exp env)
+    (let* ((new_block_exp (append block_exp (list (list 'while-exp bool_exp block_exp)))))
+      (if (run-neo-parsed-code bool_exp env)
+          (run-neo-parsed-code new_block_exp env)
+          '()
+          )
+    )
+  )
+)
 
 
 (define cascade-update-env

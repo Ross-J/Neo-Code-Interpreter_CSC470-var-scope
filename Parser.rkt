@@ -29,6 +29,11 @@
       ((equal? (car neo-code) 'block)
        (cons 'block-exp (neo-parser (cdr neo-code))))
 
+      ;(while (bool < i 10) (block (assign a (math + i 1))
+      ;-> (while-exp (bool-exp < (var-exp i) (num-exp 10)) (block-exp (assign-exp a (math-exp + (var-exp i) (num-exp 1)))
+      ((equal? (car neo-code) 'while)
+       (list 'while-exp (neo-parser (cadr neo-code)) (neo-parser (caddr neo-code))))
+
       (else (map neo-parser neo-code))
     )
   )
